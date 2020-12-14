@@ -1,4 +1,4 @@
-package readData
+package readdata
 
 import org.apache.spark.sql.{Dataset, SparkSession}
 

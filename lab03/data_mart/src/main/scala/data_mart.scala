@@ -3,12 +3,12 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import common.ConfigReader.conf
-import readData.ReadCassandra.{ClientsInput, readClients}
-import readData.ReadEs.{VisitsInput, readVisits}
-import readData.ReadHdfs.{WeblogsInput, readWebLogs}
-import readData.ReadPostgres.{CategoryInput, readCategory}
-import writeData.WritePostgres.writeClients
-import UDFs.UDFs
+import readdata.ReadCassandra.{readClients, ClientsInput}
+import readdata.ReadEs.{readVisits, VisitsInput}
+import readdata.ReadHdfs.{readWebLogs, WeblogsInput}
+import readdata.ReadPostgres.{readCategory, CategoryInput}
+import writedata.WritePostgres.writeClients
+import udfs.UDFs
 
 object data_mart extends App with Logging {
 
@@ -99,7 +99,7 @@ object data_mart extends App with Logging {
 
   case class Clients(uid: String, gender: String, age_cat: String)
 
- def ageClients(clInput: Dataset[ClientsInput],
+  def ageClients(clInput: Dataset[ClientsInput],
                    spark: SparkSession): Dataset[Clients] = {
    import spark.implicits._
 

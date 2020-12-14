@@ -1,4 +1,4 @@
-package UDFs
+package udfs
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf

@@ -1,4 +1,4 @@
-package writeData
+package writedata
 
 object WritePostgres {
   import org.apache.spark.sql.{DataFrame, SparkSession}
