@@ -10,7 +10,6 @@ import readData.ReadPostgres.{CategoryInput, readCategory}
 import writeData.WritePostgres.writeClients
 import UDFs.UDFs
 
-
 object data_mart extends App with Logging {
 
   lazy val spark: SparkSession = SparkSession
@@ -20,7 +19,6 @@ object data_mart extends App with Logging {
 
   spark.sparkContext.setLogLevel("INFO")
 
-
   val clientsInput: Dataset[ClientsInput] = readClients(conf.srcCassandraHost,
                                                         conf.srcCassandraPort,
                                                         conf.srcCassandraKeyspace,
@@ -29,7 +27,6 @@ object data_mart extends App with Logging {
   logInfo(s"clientsInput count: ${clientsInput.count}")
   logInfo(s"clientsInput schema: ${clientsInput.printSchema}")
   logInfo(s"clientsInput sample: ${clientsInput.take(10).mkString("\n")}")
-
 
   val clients: Dataset[Clients] = ageClients(clientsInput, spark)
   logInfo(s"clients count: ${clients.count}")
@@ -163,7 +160,6 @@ object data_mart extends App with Logging {
 
      weblogs
       .withColumn("host", UDFs.hostUDF(col("url")))
-      //.withColumn("host", col("url"))
       .withColumn("domain", regexp_replace(col("host"), "^www.", ""))
       .as[WeblogsDomain]
   }
@@ -224,8 +220,7 @@ object data_mart extends App with Logging {
       )
   }
 
-  println("**************************************************************")
-  println("!!!!!!!!!!!!!!!!!!!!!!!!!!!DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-  println("**************************************************************")
-
+  println("*" * 60)
+  println(" " * 28 + "DONE" + " " * 28)
+  println("*" * 60)
 }
