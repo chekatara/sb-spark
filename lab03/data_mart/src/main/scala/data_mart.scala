@@ -1,3 +1,7 @@
+import org.apache.spark.internal.Logging
+import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
 import common.ConfigReader.conf
 import readData.ReadCassandra.{ClientsInput, readClients}
 import readData.ReadEs.{VisitsInput, readVisits}
@@ -5,39 +9,62 @@ import readData.ReadHdfs.{WeblogsInput, readWebLogs}
 import readData.ReadPostgres.{CategoryInput, readCategory}
 import writeData.WritePostgres.writeClients
 import UDFs.UDFs
-import org.apache.spark.sql.{Dataset, SparkSession}
-import org.apache.spark.sql._
-import org.apache.spark.sql.functions._
 
-object data_mart extends App{
 
-  val spark: SparkSession = SparkSession
+object data_mart extends App with Logging {
+
+  lazy val spark: SparkSession = SparkSession
     .builder()
-    .appName("lab03")
+    .appName("Chechik_Ekaterina_lab03")
     .getOrCreate()
+
+  spark.sparkContext.setLogLevel("INFO")
+
 
   val clientsInput: Dataset[ClientsInput] = readClients(conf.srcCassandraHost,
                                                         conf.srcCassandraPort,
                                                         conf.srcCassandraKeyspace,
                                                         conf.srcCassandraTable,
                                                         spark)
+  logInfo(s"clientsInput count: ${clientsInput.count}")
+  logInfo(s"clientsInput schema: ${clientsInput.printSchema}")
+  logInfo(s"clientsInput sample: ${clientsInput.take(10).mkString("\n")}")
+
 
   val clients: Dataset[Clients] = ageClients(clientsInput, spark)
+  logInfo(s"clients count: ${clients.count}")
+  logInfo(s"clients schema: ${clients.printSchema}")
+  logInfo(s"clients sample: ${clients.take(10).mkString("\n")}")
 
   val visitsInput: Dataset[VisitsInput] = readVisits(conf.srcElasticsearchHost,
                                                     conf.srcElasticsearchPort,
                                                     conf.srcElasticsearchIndex,
                                                     spark)
+  logInfo(s"visitsInput count: ${visitsInput.count}")
+  logInfo(s"visitsInput schema: ${visitsInput.printSchema}")
+  logInfo(s"visitsInput sample: ${visitsInput.take(10).mkString("\n")}")
 
   val visits: Dataset[Visits] = visitsShopCat(visitsInput, spark)
+  logInfo(s"visits count: ${visits.count}")
+  logInfo(s"visits schema: ${visits.printSchema}")
+  logInfo(s"visits sample: ${visits.take(10).mkString("\n")}")
 
   val weblogsInput: Dataset[WeblogsInput] = readWebLogs(conf.srcHdfsPath,
                                                         conf.srcHdfsSep,
                                                         spark)
+  logInfo(s"weblogsInput count: ${weblogsInput.count}")
+  logInfo(s"weblogsInput schema: ${weblogsInput.printSchema}")
+  logInfo(s"weblogsInput sample: ${weblogsInput.take(10).mkString("\n")}")
 
   val webLogs: Dataset[Weblogs] = weblogs(weblogsInput, spark)
+  logInfo(s"webLogs count: ${webLogs.count}")
+  logInfo(s"webLogs schema: ${webLogs.printSchema}")
+  logInfo(s"webLogs sample: ${webLogs.take(10).mkString("\n")}")
 
   val weblogsDomain: Dataset[WeblogsDomain] = domain(webLogs, spark)
+  logInfo(s"weblogsDomain count: ${weblogsDomain.count}")
+  logInfo(s"weblogsDomain schema: ${weblogsDomain.printSchema}")
+  logInfo(s"weblogsDomain sample: ${weblogsDomain.take(10).mkString("\n")}")
 
   val categoryInput: Dataset[CategoryInput] = readCategory(conf.srcPostgresHost,
                                                            conf.srcPostgresPort,
@@ -46,14 +73,29 @@ object data_mart extends App{
                                                            conf.postgresUser,
                                                            conf.postgressPassword,
                                                            spark)
+  logInfo(s"categoryInput count: ${categoryInput.count}")
+  logInfo(s"categoryInput schema: ${categoryInput.printSchema}")
+  logInfo(s"categoryInput sample: ${categoryInput.take(10).mkString("\n")}")
 
   val category: Dataset[Category] = webCategory(categoryInput, spark)
+  logInfo(s"category count: ${category.count}")
+  logInfo(s"category schema: ${category.printSchema}")
+  logInfo(s"category sample: ${category.take(10).mkString("\n")}")
 
   val webPivot: DataFrame = webPivot(weblogsDomain, category, spark)
+  logInfo(s"webPivot count: ${webPivot.count}")
+  logInfo(s"webPivot schema: ${webPivot.printSchema}")
+  logInfo(s"webPivot sample: ${webPivot.take(10).mkString("\n")}")
 
   val shopPivot: DataFrame = shopPivot(visits, spark)
+  logInfo(s"shopPivot count: ${shopPivot.count}")
+  logInfo(s"shopPivot schema: ${shopPivot.printSchema}")
+  logInfo(s"shopPivot sample: ${shopPivot.take(10).mkString("\n")}")
 
   val clientsToPostgres: DataFrame = clientsToPostgres(clients, shopPivot, webPivot, spark)
+  logInfo(s"clientsToPostgres count: ${clientsToPostgres.count}")
+  logInfo(s"clientsToPostgres schema: ${clientsToPostgres.printSchema}")
+  logInfo(s"clientsToPostgres sample: ${clientsToPostgres.take(10).mkString("\n")}")
 
   writeClients(clientsToPostgres, conf.tgtPostgresHost, conf.tgtPostgresPort, conf.tgtPostgresSchema,
               conf.tgtPostgresTable, conf.postgresUser, conf.postgressPassword, spark)
