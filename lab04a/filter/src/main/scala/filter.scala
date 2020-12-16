@@ -31,7 +31,7 @@ object filter extends App{
     .format("kafka")
     .option("kafka.bootstrap.servers", "spark-master-1:6667")
     .option("subscribe", topic)
-    .option("startingOffsets", offset)
+    .option("startingOffsets", offsetRes)
     .load()
 
   val jsonString: Dataset[String]  = inputData
