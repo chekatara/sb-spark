@@ -28,10 +28,9 @@ object agg extends App {
     .option("kafka.bootstrap.servers", "spark-master-1:6667")
     .option("subscribe", "ekaterina_chechik")
     .option("startingOffsets", "earliest")
-    .option("maxOffsetsPerTrigger", "2000")
+    .option("maxOffsetsPerTrigger", "5000")
     .load
     .select('value.cast("string"), 'topic, 'partition, 'offset)
-    .repartition(1)
     .select(
       'value.cast("string")
     ).as[String]
