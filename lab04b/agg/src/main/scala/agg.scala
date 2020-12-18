@@ -1,17 +1,18 @@
-import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark
-import org.apache.spark.sql.Column
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
+import common.ConfigReader.conf
 
 object agg extends App {
   val spark: SparkSession = SparkSession.builder().appName("Ekaterina_Chechik_lab04b").getOrCreate()
 
-  spark.conf.set("spark.sql.shuffle.partitions", "10")
-  spark.conf.set("spark.default.parallelism", "10")
+  //spark.conf.set("spark.sql.shuffle.partitions", "10")
+  //spark.conf.set("spark.default.parallelism", "10")
 
   import spark.implicits._
 
@@ -27,11 +28,10 @@ object agg extends App {
   val sdf = spark
     .readStream
     .format("kafka")
-    //.trigger(Trigger.ProcessingTime("5 seconds"))
-    .option("kafka.bootstrap.servers", "spark-master-1:6667")
-    .option("subscribe", "ekaterina_chechik")
+    .option("kafka.bootstrap.servers", conf.kafkaInputServer)
+    .option("subscribe", conf.kafkaInputSubscribe)
     .option("startingOffsets", "earliest")
-    .option("maxOffsetsPerTrigger", "5000")
+    .option("maxOffsetsPerTrigger", "1000")
     .load
     .select('value.cast("string"), 'topic, 'partition, 'offset)
     .select(
@@ -40,7 +40,6 @@ object agg extends App {
     .withColumn("jsonData",from_json(col("value"),schemaJsonValue))
     .select("jsonData.*")
     .withColumn ("timestamp_f", ('timestamp/1000).cast("timestamp"))
-    .withColumn ("zeroValue", lit(0))
     .withWatermark("timestamp_f", "1 hour")
     .groupBy(window($"timestamp_f", "1 hour", "1 hour"))
     .agg(
@@ -61,16 +60,14 @@ object agg extends App {
   val datetime_format = DateTimeFormatter.ofPattern("yyyy_MM_dd__HH_mm_ss_SSS")
   val curTime = LocalDateTime.now().format(datetime_format)
 
-  val sink = sdf
-    .writeStream
-    .format("kafka")
-    .trigger(Trigger.ProcessingTime("5 seconds"))
-    .option("kafka.bootstrap.servers", "spark-master-1:6667")
-    .option("topic", "ekaterina_chechik_lab04b_out")
-    .option("checkpointLocation", s"/user/ekaterina.chechik/chkpnt/$curTime")
-    .option("truncate", "false")
+  val sink = sdf.writeStream.
+    format("kafka")
     .outputMode("update")
+    .option("maxOffsetsPerTrigger", "1000")
+    .option("kafka.bootstrap.servers", conf.kafkaOutputServer)
+    .option("topic", conf.kafkaOutputTopic)
+    .option("checkpointLocation", s"${conf.kafkaCheckpointLocation}$curTime")
+    .option("truncate", "false")
 
-  val sq = sink.start.awaitTermination(5 * 60 * 60 * 1000)
-
+    sink.start.awaitTermination(5 * 60 * 60 * 1000)
 }
