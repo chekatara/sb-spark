@@ -31,7 +31,7 @@ object agg extends App {
     .option("kafka.bootstrap.servers", conf.kafkaInputServer)
     .option("subscribe", conf.kafkaInputSubscribe)
     .option("startingOffsets", "earliest")
-    .option("maxOffsetsPerTrigger", "1000")
+    .option("maxOffsetsPerTrigger", "50000")
     .load
     .select('value.cast("string"), 'topic, 'partition, 'offset)
     .select(
