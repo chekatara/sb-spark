@@ -66,7 +66,7 @@ object agg extends App {
     .format("kafka")
     .trigger(Trigger.ProcessingTime("5 seconds"))
     .option("kafka.bootstrap.servers", "spark-master-1:6667")
-    .option("subscribe", "ekaterina_chechik_lab04b_out")
+    .option("topic", "ekaterina_chechik_lab04b_out")
     .option("checkpointLocation", s"/user/ekaterina.chechik/chkpnt/$curTime")
     .option("truncate", "false")
     .outputMode("update")
