@@ -10,7 +10,10 @@ import java.time.format.DateTimeFormatter
 object agg extends App {
   val spark: SparkSession = SparkSession.builder().appName("Ekaterina_Chechik_lab04b").getOrCreate()
 
-    import spark.implicits._
+  spark.conf.set("spark.sql.shuffle.partitions", "10")
+  spark.conf.set("spark.default.parallelism", "10")
+
+  import spark.implicits._
 
   val schemaJsonValue = StructType(Array(
     StructField ("category", StringType),
