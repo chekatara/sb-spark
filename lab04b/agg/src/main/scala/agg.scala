@@ -67,12 +67,10 @@ object agg extends App {
     .trigger(Trigger.ProcessingTime("5 seconds"))
     .option("kafka.bootstrap.servers", "spark-master-1:6667")
     .option("subscribe", "ekaterina_chechik_lab04b_out")
-    //.option("maxOffsetsPerTrigger", "200")
-    //.option("numRows", "20")
     .option("checkpointLocation", s"/user/ekaterina.chechik/chkpnt/$curTime")
     .option("truncate", "false")
     .outputMode("update")
 
-  val sq = sink.start
+  val sq = sink.start.awaitTermination(5 * 60 * 60 * 1000)
 
 }
