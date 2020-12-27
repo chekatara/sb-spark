@@ -10,6 +10,8 @@ object users_items extends App {
 
   import spark.implicits._
 
+  //spark.conf.set("spark.sql.session.timeZone", "UTC")
+
   val inputDir: String = spark.conf.get("spark.users_items.input_dir",
                                         "/user/ekaterina.chechik/visits")
 
