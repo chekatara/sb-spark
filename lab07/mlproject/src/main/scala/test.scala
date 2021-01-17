@@ -13,11 +13,19 @@ import scala.util.Random
 
 object test extends App {
 
-  val spark: SparkSession = SparkSession.builder().appName("ekaterina_chechik_lab07").getOrCreate()
+  val spark: SparkSession = SparkSession.builder()
+    .appName("ekaterina_chechik_lab07")
+    .config("spark.executor.instances", "10")
+    .config("spark.executor.cores", "8")
+    .config("spark.executor.memory", "4g")
+    .config("spark.default.parallelism", 100)
+    .config("spark.sql.shuffle.partitions",100)
+    .config("spark.sql.session.timeZone", "UTC")
+    .getOrCreate()
 
   import spark.implicits._
 
-  val hdfsModelPath: String = spark.conf.get("spark.mlproject.model_dir", conf.hdfsDataPath)
+  val hdfsModelPath: String = spark.conf.get("spark.mlproject.model_dir", conf.hdfsModelPath)
   val kafkaTestHosts = spark.conf.get("spark.mlproject.test.kafka.hosts", conf.kafkaTestHosts)
   val kafkaTestStartingOffsets = spark.conf.get("spark.mlproject.test.kafka.starting_offsets",
     conf.kafkaTestStartingOffsets)
